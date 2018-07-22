@@ -1,0 +1,62 @@
+import mysql = require('mysql');
+
+export default class MySQL{
+    //singleton
+
+    private static _instance: MySQL;
+
+    cnn: mysql.Connection; //conection
+    conectado: boolean= false;
+
+
+    constructor( ){
+        console.log('clase inicializada');
+
+        this.cnn = mysql.createConnection({
+            host: 'localhost',
+            user: 'root',
+            password: '',
+            database: 'node_db'
+        });
+
+        this.conectarDB();
+        
+    }
+
+    public static get instance(){
+        //verifica si existe una instancia, sino existe crea el constructor y es inicializado
+        //previniendo llamar varias veces la conexion
+        return this._instance || ( this._instance = new this()) ;
+    }
+
+    static ejecutarQuery( query: string, callback: Function  ){
+
+        this.instance.cnn.query(query, (err,results: Object[],fields )=>{
+            if(err){
+                console.log("Error en query");
+                console.log(err);
+                
+                return callback( err ); 
+            }
+
+            if( results.length ===0 ){
+                callback('El registro solicitado no existe');
+            } else {
+                callback( null, results);
+            }
+
+          
+        });
+    }
+
+    private conectarDB(){
+        this.cnn.connect( (err: mysql.MysqlError)=>{
+            if(err){
+                console.log(err.message);
+                return;
+            }
+            this.conectado =true;
+            console.log('Base de datos online!');
+        } )
+    }
+}
